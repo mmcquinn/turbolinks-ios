@@ -33,7 +33,8 @@ class AuthenticationController: UIViewController {
 
 extension AuthenticationController: WKNavigationDelegate {
     func webView(webView: WKWebView, decidePolicyForNavigationAction navigationAction: WKNavigationAction, decisionHandler: (WKNavigationActionPolicy) -> Void) {
-        if let URL = navigationAction.request.URL where URL != self.URL {
+        let URL = navigationAction.request.URL!
+        if URL.path == "/"  {
             decisionHandler(.Cancel)
             delegate?.authenticationControllerDidAuthenticate(self)
             return

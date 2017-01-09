@@ -3,7 +3,7 @@ import WebKit
 import Turbolinks
 
 class ApplicationController: UINavigationController {
-    private let URL = NSURL(string: "http://localhost:9292")!
+    private let URL = NSURL(string: "http://localhost:9293")!
     private let webViewProcessPool = WKProcessPool()
 
     private var application: UIApplication {
@@ -47,11 +47,11 @@ class ApplicationController: UINavigationController {
         pushViewController(viewController, animated: true)
     }
 
-    private func presentAuthenticationController() {
+    private func presentAuthenticationController(URL: NSURL) {
         let authenticationController = AuthenticationController()
         authenticationController.delegate = self
         authenticationController.webViewConfiguration = webViewConfiguration
-        authenticationController.URL = URL.URLByAppendingPathComponent("sign-in")
+        authenticationController.URL = URL
         authenticationController.title = "Sign in"
 
         let authNavigationController = UINavigationController(rootViewController: authenticationController)
@@ -61,8 +61,8 @@ class ApplicationController: UINavigationController {
 
 extension ApplicationController: SessionDelegate {
     func session(session: Session, didProposeVisitToURL URL: NSURL, withAction action: Action) {
-        if URL.path == "/numbers" {
-            presentNumbersViewController()
+        if URL.path == "/users/auth/twitter" {
+            presentAuthenticationController(URL);
         } else {
             presentVisitableForSession(session, URL: URL, action: action)
         }
@@ -70,22 +70,6 @@ extension ApplicationController: SessionDelegate {
     
     func session(session: Session, didFailRequestForVisitable visitable: Visitable, withError error: NSError) {
         NSLog("ERROR: %@", error)
-        guard let demoViewController = visitable as? DemoViewController, errorCode = ErrorCode(rawValue: error.code) else { return }
-
-        switch errorCode {
-        case .HTTPFailure:
-            let statusCode = error.userInfo["statusCode"] as! Int
-            switch statusCode {
-            case 401:
-                presentAuthenticationController()
-            case 404:
-                demoViewController.presentError(.HTTPNotFoundError)
-            default:
-                demoViewController.presentError(Error(HTTPStatusCode: statusCode))
-            }
-        case .NetworkFailure:
-            demoViewController.presentError(.NetworkError)
-        }
     }
     
     func sessionDidStartRequest(session: Session) {
